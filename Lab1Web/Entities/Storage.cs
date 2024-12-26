@@ -35,7 +35,7 @@ namespace Lab1Web.Entities
         public IStorage<Student> StudentStorage { get; set; }
         public IStorage<Instructor> InstructorStorage { get; set; }
     }
-    public class Storage
+    public class Storage: IStorage
     {
         public IStorage<Course> CourseStorage { get; set; } = new Storage<Course>();
         public IStorage<Student> StudentStorage { get; set; } = new Storage<Student>();
