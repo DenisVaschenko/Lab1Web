@@ -27,7 +27,7 @@ builder.Services.AddSwaggerGen(options =>
     {
         Title = "My API",
         Version = "v1",
-        Description = "API для роботи з користувачами."
+        Description = "API для роботи з навчальним закладом."
     });
 });
 builder.Services.AddValidatorsFromAssemblyContaining<CourseValidator>();
