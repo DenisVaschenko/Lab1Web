@@ -82,6 +82,7 @@ namespace Lab1Web.Controllers
             foreach (var item in instructorsId.Where(x => !course.InstructorsId.Contains(x) && _storage.InstructorStorage.Get(x) != null))
             {
                 course.InstructorsId.Add(item);
+                _storage.InstructorStorage.Get(item).CoursesId.Add(id);
             };
             return Ok(course);
         }
@@ -98,6 +99,7 @@ namespace Lab1Web.Controllers
             if (course == null) return NotFound();
             foreach (var item in studentsId.Where(x => !course.StudentsId.Contains(x) && _storage.StudentStorage.Get(x) != null))
             {
+                _storage.StudentStorage.Get(item).CoursesId.Add(id);
                 course.StudentsId.Add(item);
             };
             return Ok(course);
@@ -113,7 +115,7 @@ namespace Lab1Web.Controllers
         {
             var course = _storage.CourseStorage.Get(id);
             if (course == null) return NotFound();
-            foreach (var item in course.InstructorsId.Where(x => instructorsId.Contains(x)))
+            foreach (var item in instructorsId.Where(x => course.InstructorsId.Contains(x)))
             {
                 course.InstructorsId.Remove(item);
                 _storage.InstructorStorage.Get(item).CoursesId.Remove(id);
@@ -131,7 +133,7 @@ namespace Lab1Web.Controllers
         {
             var course = _storage.CourseStorage.Get(id);
             if (course == null) return NotFound();
-            foreach (var item in course.StudentsId.Where(x => studentsId.Contains(x)))
+            foreach (var item in studentsId.Where(x => course.StudentsId.Contains(x)))
             {
                 course.StudentsId.Remove(item);
                 _storage.StudentStorage.Get(item).CoursesId.Remove(id);
@@ -149,7 +151,14 @@ namespace Lab1Web.Controllers
         {
             var course = _storage.CourseStorage.Get(id);
             if (course == null) return NotFound();
-            course.StudentsId.Select(x => _storage.StudentStorage.Get(x).CoursesId.Remove(id));
+            foreach (var item in course.StudentsId.Select(x => _storage.StudentStorage.Get(x)))
+            {
+                item.CoursesId.Remove(id);
+            };
+            foreach (var item in course.InstructorsId.Select(x => _storage.InstructorStorage.Get(x)))
+            {
+                item.CoursesId.Remove(id);
+            };
             _storage.CourseStorage.Delete(id);
             return Ok(course);  
         }
