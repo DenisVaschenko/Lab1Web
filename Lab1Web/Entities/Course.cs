@@ -2,11 +2,6 @@
 
 namespace Lab1Web.Entities
 {
-    enum Persons
-    {
-        student,
-        instructor
-    }
     public class Course: Entity
     {
         public int Id { get; } = IdGenerator<Course>.Instance.Genereate();

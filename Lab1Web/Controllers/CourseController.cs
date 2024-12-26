@@ -10,8 +10,8 @@ namespace Lab1Web.Controllers
     [ApiController]
     public class CourseController : ControllerBase
     {
-        Storage _storage;
-        public CourseController(Storage storage)
+        IStorage _storage;
+        public CourseController(IStorage storage)
         {
             _storage = storage;
         }
