@@ -1,5 +1,6 @@
 ﻿using Lab1Web.Entities;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -9,10 +10,10 @@ namespace Lab1Web.Controllers
     [ApiController]
     public class StudentController : ControllerBase
     {
-        IStorage _storage;
-        public StudentController(IStorage storage)
+        private readonly DataModelContext _context;
+        public StudentController(DataModelContext context)
         {
-            _storage = storage;
+            _context = context;
         }
 
         /// <summary>
@@ -22,8 +23,8 @@ namespace Lab1Web.Controllers
         /// <param name="pageSize">The desired page size.</param>
         /// <returns>Paged courses</returns>
         [HttpGet(Name = "GetAllStudents")]
-        public IEnumerable<Student> GetAll(int page = 1, int pageSize = 10) =>
-            _storage.StudentStorage.GetAll().Skip(pageSize * (page - 1)).Take(pageSize);
+        public async Task<IEnumerable<Student>> GetAll(int page = 1, int pageSize = 10) =>
+            await _context.Set<Student>().AsNoTracking().OrderBy(x => x.Id).Skip((page - 1) * pageSize).Take(pageSize).ToListAsync();
 
         /// <summary>
         /// Returns Student for an id specified
@@ -34,23 +35,19 @@ namespace Lab1Web.Controllers
         [HttpGet("{id}", Name = "Find student by id")]
         [ProducesResponseType<Course>(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public IActionResult GetById(int id)
-        {
-            
-            var student = _storage.StudentStorage.Get(id);
-            return student != null ? Ok(student) : NotFound();
-        }
+        public async Task<Student> GetById(int id) => await _context.Set<Student>().FindAsync(id);
 
         [HttpGet("find-by-name/{name}", Name = "Find student by name")]
-        public IActionResult GetByName(string name)
-        {
-            var students = _storage.StudentStorage.GetAll().Where(x => x.Name.StartsWith(name));
-            return students != null ? Ok(students) : NotFound();
-        }
+        public async Task<Student> GetByName(string name) => await _context.Set<Student>().AsNoTracking().FirstAsync(x => x.Name == name);
 
         [HttpPost(Name = "AddStudent")]
         [ApiConventionMethod(typeof(DefaultApiConventions), nameof(DefaultApiConventions.Post))]
-        public IActionResult Post([FromBody] Student student) => CreatedAtAction(nameof(GetById), new { id = student.Id }, _storage.StudentStorage.Add(student));
+        public async Task<IActionResult> Post([FromBody] Student student)
+        {
+            _context.Set<Student>().Add(student);
+            await _context.SaveChangesAsync();
+            return CreatedAtAction(nameof(GetById), student);
+        }
         /// <summary>
         /// Update the existing entity by its id
         /// </summary>
@@ -58,16 +55,19 @@ namespace Lab1Web.Controllers
         /// <response code = "200">Returns the changed item</response>
         /// <response code = "404">If the item isn't found</response>
         [HttpPut("{id}", Name = "Update student")]
-        public IActionResult Put(int id, string name, int age, string email, string phone)
+        public async Task<IActionResult> Put(int id, Student newStudent)
         {
-            var student = _storage.StudentStorage.Get(id);
-            if (student == null) return NotFound();
-            if (name != null) student.Name = name;
-            if (age != 0) student.Age = age;
-            if (phone != null) student.Phone = phone;
+            Student student = await _context.Set<Student>().FindAsync(id);
+            student.Name = newStudent.Name;
+            student.Email = newStudent.Email;
+            student.Phone = newStudent.Phone;
+            student.Group = newStudent.Group;
+            student.Age = newStudent.Age;
+            student.AverageScore = newStudent.AverageScore;
+            await _context.SaveChangesAsync();
             return Ok(student);
 
-        }
+        }/*
         /// <summary>
         /// Set new courses
         /// </summary>
@@ -103,7 +103,7 @@ namespace Lab1Web.Controllers
                 _storage.CourseStorage.Get(item).StudentsId.Remove(id);
             };
             return Ok(student);
-        }
+        }*/
         /// <summary>
         /// Delete 
         /// </summary>
@@ -111,24 +111,19 @@ namespace Lab1Web.Controllers
         /// <response code = "200">Returns the deleted item</response>
         /// <response code = "404">If the item isn't found</response>
         [HttpDelete("{id}", Name = "Delete student by Id")]
-        public IActionResult Delete(int id)
+        public async Task<IActionResult> Delete(int id)
         {
-            var student = _storage.StudentStorage.Get(id);
-            if (student == null) return NotFound();
-            foreach (var item in student.CoursesId.Select(x => _storage.CourseStorage.Get(x)))
-            {
-                item.StudentsId.Remove(id);
-            };
-            _storage.StudentStorage.Delete(id);
+            Student student = await _context.Set<Student>().FindAsync(id);
+            _context.Set<Student>().Remove(student);
+            await _context.SaveChangesAsync();
             return Ok(student);
         }
         [HttpDelete(Name = "Delete all students")]
-        public IActionResult Delete()
+        public async Task<IActionResult> Delete()
         {
-            foreach (var item in _storage.StudentStorage.GetAll())
-            {
-                Delete(item.Id);
-            }
+            var list = await _context.Set<Student>().ToListAsync();
+            _context.Set<Student>().RemoveRange(list);
+            await _context.SaveChangesAsync();
             return Ok();
         }
     }

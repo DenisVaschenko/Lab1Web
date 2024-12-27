@@ -5,12 +5,12 @@ namespace Lab1Web.Entities
 {
     public abstract class Person: Entity
     {
-        public int Id { get; } = IdGenerator<Person>.Instance.Genereate();
+        public int Id { get; }
         public string Name { get; set; }
         public int Age { get; set; }
         public string Email { get; set; }
         public string Phone { get; set; }
-        public List<int> CoursesId { get; } = new List<int>();
+        public List<Course> CoursesId { get; } = new List<Course>();
 
     }
     public class Student : Person

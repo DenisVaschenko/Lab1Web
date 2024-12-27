@@ -1,5 +1,6 @@
 ﻿using Lab1Web.Entities;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
@@ -9,10 +10,10 @@ namespace Lab1Web.Controllers
     [ApiController]
     public class InstructorController : ControllerBase
     {
-        IStorage _storage;
-        public InstructorController(IStorage storage)
+        private readonly DataModelContext _context;
+        public InstructorController(DataModelContext context)
         {
-            _storage = storage;
+            _context = context;
         }
 
         /// <summary>
@@ -22,35 +23,27 @@ namespace Lab1Web.Controllers
         /// <param name="pageSize">The desired page size.</param>
         /// <returns>Paged courses</returns>
         [HttpGet(Name = "GetAllInstructors")]
-        public IEnumerable<Instructor> GetAll(int page = 1, int pageSize = 10) =>
-            _storage.InstructorStorage.GetAll().Skip(pageSize * (page - 1)).Take(pageSize);
+        public async Task<IEnumerable<Instructor>> GetAll(int page = 1, int pageSize = 10) =>
+            await _context.Set<Instructor>().AsNoTracking().OrderBy(x => x.Id).Skip((page - 1) * pageSize).Take(pageSize).ToListAsync();
 
         /// <summary>
         /// Returns Instructor for an id specified
         /// </summary>
         /// <param name="id"> Id of the Instructor</param>
-        /// <response code = "200">Returns the found item</response>
-        /// <response code = "404">If the item isn't found</response>
         [HttpGet("{id}", Name = "Find Instructor by id")]
-        [ProducesResponseType<Course>(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        public IActionResult GetById(int id)
-        {
-
-            var instructor = _storage.InstructorStorage.Get(id);
-            return instructor != null ? Ok(instructor) : NotFound();
-        }
+        public async Task<Instructor> GetById(int id) => await _context.Set<Instructor>().FindAsync(id);
 
         [HttpGet("find-by-name/{name}", Name = "Find Instructor by name")]
-        public IActionResult GetByName(string name)
-        {
-            var instructors = _storage.InstructorStorage.GetAll().Where(x => x.Name.StartsWith(name));
-            return instructors != null ? Ok(instructors) : NotFound();
-        }
+        public async Task<Instructor> GetByName(string name) => await _context.Set<Instructor>().AsNoTracking().FirstAsync(x => x.Name == name);
 
         [HttpPost(Name = "AddInstructor")]
         [ApiConventionMethod(typeof(DefaultApiConventions), nameof(DefaultApiConventions.Post))]
-        public IActionResult Post([FromBody] Instructor instructor) => CreatedAtAction(nameof(GetById), new { id = instructor.Id }, _storage.InstructorStorage.Add(instructor));
+        public async Task<IActionResult> Post([FromBody] Instructor instructor)
+        {
+            _context.Set<Instructor>().Add(instructor);
+            await _context.SaveChangesAsync();
+            return CreatedAtAction(nameof(GetById), instructor);
+        }
         /// <summary>
         /// Update the existing entity by its id
         /// </summary>
@@ -58,16 +51,19 @@ namespace Lab1Web.Controllers
         /// <response code = "200">Returns the changed item</response>
         /// <response code = "404">If the item isn't found</response>
         [HttpPut("{id}", Name = "Update instructor")]
-        public IActionResult Put(int id, string name, int age, string email, string phone)
+        public async Task<IActionResult> Put(int id, Instructor newInstructor)
         {
-            var instructor = _storage.InstructorStorage.Get(id);
-            if (instructor == null) return NotFound();
-            if (name != null) instructor.Name = name;
-            if (age != 0) instructor.Age = age;
-            if (phone != null) instructor.Phone = phone;
+            Instructor instructor = await _context.Set<Instructor>().FindAsync(id);
+            instructor.Name = newInstructor.Name;
+            instructor.Email = newInstructor.Email;
+            instructor.Phone = newInstructor.Phone;
+            instructor.Specialisation = newInstructor.Specialisation;
+            instructor.Age = newInstructor.Age;
+            instructor.Degree = newInstructor.Degree;
+            await _context.SaveChangesAsync();
             return Ok(instructor);
 
-        }
+        }/*
         /// <summary>
         /// Set new courses
         /// </summary>
@@ -103,7 +99,7 @@ namespace Lab1Web.Controllers
                 _storage.CourseStorage.Get(item).InstructorsId.Remove(id);
             };
             return Ok(instructor);
-        }
+        }*/
         /// <summary>
         /// Delete 
         /// </summary>
@@ -111,24 +107,19 @@ namespace Lab1Web.Controllers
         /// <response code = "200">Returns the deleted item</response>
         /// <response code = "404">If the item isn't found</response>
         [HttpDelete("{id}", Name = "Delete instructor by Id")]
-        public IActionResult Delete(int id)
+        public async Task<IActionResult> Delete(int id)
         {
-            var instructor = _storage.InstructorStorage.Get(id);
-            if (instructor == null) return NotFound();
-            foreach (var item in instructor.CoursesId.Select(x => _storage.CourseStorage.Get(x)))
-            {
-                item.InstructorsId.Remove(id);
-            };
-            _storage.InstructorStorage.Delete(id);
+            Instructor instructor = await _context.Set<Instructor>().FindAsync(id);
+            _context.Set<Instructor>().Remove(instructor);
+            await _context.SaveChangesAsync();
             return Ok(instructor);
         }
         [HttpDelete(Name = "Delete all instructors")]
-        public IActionResult Delete()
+        public async Task<IActionResult> Delete()
         {
-            foreach (var item in _storage.InstructorStorage.GetAll())
-            {
-                Delete(item.Id);
-            }
+            var list = await _context.Set<Instructor>().ToListAsync();
+            _context.Set<Instructor>().RemoveRange(list);
+            await _context.SaveChangesAsync();
             return Ok();
         }
     }

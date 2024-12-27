@@ -1,15 +1,17 @@
 using Lab1Web;
 using Lab1Web.Entities;
-
+using Microsoft.EntityFrameworkCore.Design;
 using SharpGrip.FluentValidation.AutoValidation.Mvc.Extensions;
 using FluentValidation;
 using Microsoft.OpenApi.Models;
+using Microsoft.EntityFrameworkCore;
 using System.Reflection;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-builder.Services.AddSingleton<IStorage, Storage>();
+builder.Services.AddDbContext<DataModelContext>(
+    contextOptions => contextOptions.UseSqlite("Data Source = MyDatabase.db"));
 builder.Services.AddFluentValidationAutoValidation();
 builder.Services.AddControllers();
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
