@@ -4,8 +4,8 @@ namespace Lab1Web.DTO
 {
     public class StudentOutputDto : PersonOutputDto
     {
-        public string? Specialisation { get; set; }
-        public string Degree { get; set; }
+        public string Group { get; set; }
+        public double AverageScore { get; set; }
     }
     public class StudentOutputDtoCollection
     {
