@@ -48,7 +48,7 @@ namespace Lab1Web.Controllers
         public async Task<IActionResult> Post([FromBody] Course course)
         {
             await _repository.CourseRepository.AddAsync(course);
-            return CreatedAtAction(nameof(GetAll), _mapper.Map <CourseOutputDto>(course));
+            return CreatedAtAction(nameof(GetAll), _mapper.Map<CourseOutputDto>(course));
         }
         /// <summary>
         /// Update the existing entity by its id

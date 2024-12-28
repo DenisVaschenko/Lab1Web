@@ -8,7 +8,7 @@ namespace Lab1Web.DTO
         {
             CreateMap<Instructor, InstructorOutputDto>().
                 ForMember(d => d.Courses, opt => opt.MapFrom(src => src.Courses));
-            CreateMap<Instructor, InstructorOutputDto>();
+            CreateMap<Instructor, InstructorOutputDtoCollection>();
         }
     }
 }

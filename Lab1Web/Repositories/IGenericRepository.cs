@@ -23,7 +23,7 @@ namespace Lab1Web.Repositories
         public Task<TEntity?> FindAsync(TKey key) => _context.Set<TEntity>().FindAsync(key).AsTask();
         public Task AddAsync(TEntity entity)
         {
-            _context.Set<TEntity>().AddAsync(entity);
+            _context.Set<TEntity>().Add(entity);
             return _context.SaveChangesAsync();
         }
         public Task UpdateAsync(TEntity entity)
