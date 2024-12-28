@@ -7,8 +7,8 @@ namespace Lab1Web.Entities
         public int Id { get; }
         public string Title { get; set; }
         public List<Instructor> Instructors { get; } = new List<Instructor>();
-        public int Duration { get; set; }
-        public string Difficulty { get; set; }
-        public List<Student> StudentsId { get; } = new List<Student>();
+        public int? Duration { get; set; }
+        public string? Difficulty { get; set; }
+        public List<Student> Students { get; } = new List<Student>();
     }
 }

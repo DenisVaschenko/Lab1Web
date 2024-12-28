@@ -10,7 +10,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace Lab1Web.Migrations
 {
     [DbContext(typeof(DataModelContext))]
-    [Migration("20241227000633_dataModelMigration")]
+    [Migration("20241228020355_dataModelMigration")]
     partial class dataModelMigration
     {
         /// <inheritdoc />
@@ -19,6 +19,36 @@ namespace Lab1Web.Migrations
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "9.0.0");
 
+            modelBuilder.Entity("CourseInstructor", b =>
+                {
+                    b.Property<int>("CoursesId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("InstructorsId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("CoursesId", "InstructorsId");
+
+                    b.HasIndex("InstructorsId");
+
+                    b.ToTable("CourseInstructor");
+                });
+
+            modelBuilder.Entity("CourseStudent", b =>
+                {
+                    b.Property<int>("CoursesId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("StudentsId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("CoursesId", "StudentsId");
+
+                    b.HasIndex("StudentsId");
+
+                    b.ToTable("CourseStudent");
+                });
+
             modelBuilder.Entity("Lab1Web.Entities.Course", b =>
                 {
                     b.Property<int>("Id")
@@ -26,12 +56,11 @@ namespace Lab1Web.Migrations
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("Difficulty")
-                        .IsRequired()
                         .ValueGeneratedOnAdd()
                         .HasColumnType("TEXT")
                         .HasDefaultValue("medium");
 
-                    b.Property<int>("Duration")
+                    b.Property<int?>("Duration")
                         .HasColumnType("INTEGER");
 
                     b.Property<string>("Title")
@@ -59,7 +88,6 @@ namespace Lab1Web.Migrations
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Email")
-                        .IsRequired()
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Name")
@@ -68,10 +96,9 @@ namespace Lab1Web.Migrations
 
                     b.Property<string>("Phone")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("UNIQUE");
 
                     b.Property<string>("Specialisation")
-                        .IsRequired()
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
@@ -96,7 +123,6 @@ namespace Lab1Web.Migrations
                         .HasDefaultValue(75.0);
 
                     b.Property<string>("Email")
-                        .IsRequired()
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Group")
@@ -109,11 +135,41 @@ namespace Lab1Web.Migrations
 
                     b.Property<string>("Phone")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("UNIQUE");
 
                     b.HasKey("Id");
 
                     b.ToTable("Student");
+                });
+
+            modelBuilder.Entity("CourseInstructor", b =>
+                {
+                    b.HasOne("Lab1Web.Entities.Course", null)
+                        .WithMany()
+                        .HasForeignKey("CoursesId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Lab1Web.Entities.Instructor", null)
+                        .WithMany()
+                        .HasForeignKey("InstructorsId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("CourseStudent", b =>
+                {
+                    b.HasOne("Lab1Web.Entities.Course", null)
+                        .WithMany()
+                        .HasForeignKey("CoursesId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Lab1Web.Entities.Student", null)
+                        .WithMany()
+                        .HasForeignKey("StudentsId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 #pragma warning restore 612, 618
         }

@@ -14,6 +14,7 @@ builder.Services.AddDbContext<DataModelContext>(
     contextOptions => contextOptions.UseSqlite("Data Source = MyDatabase.db"));
 builder.Services.AddFluentValidationAutoValidation();
 builder.Services.AddControllers();
+builder.Services.AddAutoMapper(Assembly.GetExecutingAssembly());
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
@@ -35,6 +36,7 @@ builder.Services.AddSwaggerGen(options =>
 builder.Services.AddValidatorsFromAssemblyContaining<CourseValidator>();
 builder.Services.AddValidatorsFromAssemblyContaining<StudentValidator>();
 builder.Services.AddValidatorsFromAssemblyContaining<InstructorValidator>();
+builder.Services.AddRepositories();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

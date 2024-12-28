@@ -8,9 +8,9 @@ namespace Lab1Web.Entities
         public int Id { get; }
         public string Name { get; set; }
         public int Age { get; set; }
-        public string Email { get; set; }
+        public string? Email { get; set; }
         public string Phone { get; set; }
-        public List<Course> CoursesId { get; } = new List<Course>();
+        public List<Course> Courses { get; } = new List<Course>();
 
     }
     public class Student : Person
@@ -21,7 +21,7 @@ namespace Lab1Web.Entities
     }
     public class Instructor : Person
     {
-        public string Specialisation { get; set; }
+        public string? Specialisation { get; set; }
         public string Degree { get; set; }
     }
 

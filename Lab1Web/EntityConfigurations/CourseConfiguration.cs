@@ -9,7 +9,10 @@ namespace Lab1Web.EntityConfigurations
         public void Configure(EntityTypeBuilder<Course> builder)
         {
             builder.Property(e => e.Difficulty).HasDefaultValue("medium");
-            builder.Property(e => e.Id).ValueGeneratedOnAdd().IsRequired().HasColumnType("INTEGER PRIMARY KEY");
+            builder.Property(e => e.Id).ValueGeneratedOnAdd().IsRequired();
+
+            builder.HasMany(e => e.Students).WithMany(e => e.Courses);
+            builder.HasMany(e => e.Instructors).WithMany(e => e.Courses);
         }
     }
 }

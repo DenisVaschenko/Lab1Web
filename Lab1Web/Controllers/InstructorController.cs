@@ -1,19 +1,23 @@
-﻿using Lab1Web.Entities;
+﻿using AutoMapper;
+using Lab1Web.Entities;
+using Lab1Web.Repositories;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
-
+using Lab1Web.DTO;
 namespace Lab1Web.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
     public class InstructorController : ControllerBase
     {
-        private readonly DataModelContext _context;
-        public InstructorController(DataModelContext context)
+        private readonly IGenericRepository _repository;
+        private readonly IMapper _mapper;
+        public InstructorController(IGenericRepository repository, IMapper mapper)
         {
-            _context = context;
+            _mapper = mapper;
+            _repository = repository;
         }
 
         /// <summary>
@@ -23,26 +27,26 @@ namespace Lab1Web.Controllers
         /// <param name="pageSize">The desired page size.</param>
         /// <returns>Paged courses</returns>
         [HttpGet(Name = "GetAllInstructors")]
-        public async Task<IEnumerable<Instructor>> GetAll(int page = 1, int pageSize = 10) =>
-            await _context.Set<Instructor>().AsNoTracking().OrderBy(x => x.Id).Skip((page - 1) * pageSize).Take(pageSize).ToListAsync();
+        public async Task<IEnumerable<InstructorOutputDto>> GetAll(int page = 1, int pageSize = 10) =>
+            await _mapper.ProjectTo<InstructorOutputDto>(_repository.InstructorRepository.GetAll().AsNoTracking().Skip((page - 1) * pageSize).Take(pageSize)).ToListAsync();
 
         /// <summary>
         /// Returns Instructor for an id specified
         /// </summary>
         /// <param name="id"> Id of the Instructor</param>
         [HttpGet("{id}", Name = "Find Instructor by id")]
-        public async Task<Instructor> GetById(int id) => await _context.Set<Instructor>().FindAsync(id);
+        public async Task<InstructorOutputDto> GetById(int id) => _mapper.Map<InstructorOutputDto>(await _repository.InstructorRepository.FindAsync(id));
 
         [HttpGet("find-by-name/{name}", Name = "Find Instructor by name")]
-        public async Task<Instructor> GetByName(string name) => await _context.Set<Instructor>().AsNoTracking().FirstAsync(x => x.Name == name);
+        public async Task<InstructorOutputDto> GetByName(string name) => 
+            _mapper.Map<InstructorOutputDto>(await _repository.InstructorRepository.GetAll().AsNoTracking().FirstAsync(x => x.Name == name));
 
         [HttpPost(Name = "AddInstructor")]
         [ApiConventionMethod(typeof(DefaultApiConventions), nameof(DefaultApiConventions.Post))]
         public async Task<IActionResult> Post([FromBody] Instructor instructor)
         {
-            _context.Set<Instructor>().Add(instructor);
-            await _context.SaveChangesAsync();
-            return CreatedAtAction(nameof(GetById), instructor);
+            await _repository.InstructorRepository.AddAsync(instructor);
+            return CreatedAtAction(nameof(GetAll), _mapper.Map<InstructorOutputDto>(instructor));
         }
         /// <summary>
         /// Update the existing entity by its id
@@ -53,17 +57,18 @@ namespace Lab1Web.Controllers
         [HttpPut("{id}", Name = "Update instructor")]
         public async Task<IActionResult> Put(int id, Instructor newInstructor)
         {
-            Instructor instructor = await _context.Set<Instructor>().FindAsync(id);
+            var instructor = await _repository.InstructorRepository.FindAsync(id);
+            if (instructor == null) return NotFound();
             instructor.Name = newInstructor.Name;
             instructor.Email = newInstructor.Email;
             instructor.Phone = newInstructor.Phone;
             instructor.Specialisation = newInstructor.Specialisation;
             instructor.Age = newInstructor.Age;
             instructor.Degree = newInstructor.Degree;
-            await _context.SaveChangesAsync();
-            return Ok(instructor);
+            await _repository.InstructorRepository.UpdateAsync(instructor);
+            return Ok(_mapper.Map<InstructorOutputDto>(instructor));
 
-        }/*
+        }
         /// <summary>
         /// Set new courses
         /// </summary>
@@ -71,16 +76,14 @@ namespace Lab1Web.Controllers
         /// <response code = "200">Returns the changed item</response>
         /// <response code = "404">If the item isn't found</response>
         [HttpPut("[action]/{id}")]
-        public IActionResult AttachCourses(int id, IEnumerable<int> coursesId)
+        public async Task<IActionResult> AttachCourses(int id, IEnumerable<int> coursesId)
         {
-            var instructor = _storage.InstructorStorage.Get(id);
+            var instructor = await _repository.InstructorRepository.GetAll().Include(e => e.Courses).FirstAsync(e => e.Id == id);
             if (instructor == null) return NotFound();
-            foreach (var item in coursesId.Where(x => !instructor.CoursesId.Contains(x) && _storage.CourseStorage.Get(x) != null))
-            {
-                instructor.CoursesId.Add(item);
-                _storage.CourseStorage.Get(item).InstructorsId.Add(id);
-            };
-            return Ok(instructor);
+            var courses = await _repository.CourseRepository.GetAll().Where(e => coursesId.Contains(e.Id)).Where(e => !instructor.Courses.Contains(e)).ToListAsync();
+            instructor.Courses.AddRange(courses);
+            await _repository.InstructorRepository.UpdateAsync(instructor);
+            return Ok(_mapper.Map<InstructorOutputDto>(instructor));
         }
         /// <summary>
         /// Detach courses
@@ -89,17 +92,18 @@ namespace Lab1Web.Controllers
         /// <response code = "200">Returns the changed item</response>
         /// <response code = "404">If the item isn't found</response>
         [HttpPut("[action]/{id}")]
-        public IActionResult DetachCourses(int id, IEnumerable<int> coursesId)
+        public async Task<IActionResult> DetachCourses(int id, IEnumerable<int> coursesId)
         {
-            var instructor = _storage.InstructorStorage.Get(id);
+            var instructor = await _repository.InstructorRepository.GetAll().Include(e => e.Courses).FirstAsync(e => e.Id == id);
             if (instructor == null) return NotFound();
-            foreach (var item in coursesId.Where(x => instructor.CoursesId.Contains(x)))
+            var courses = await _repository.CourseRepository.GetAll().Where(e => coursesId.Contains(e.Id)).ToListAsync();
+            foreach (var e in courses)
             {
-                instructor.CoursesId.Remove(item);
-                _storage.CourseStorage.Get(item).InstructorsId.Remove(id);
-            };
-            return Ok(instructor);
-        }*/
+                instructor.Courses.Remove(e);
+            }
+            await _repository.InstructorRepository.UpdateAsync(instructor);
+            return Ok(_mapper.Map<InstructorOutputDto>(instructor));
+        }
         /// <summary>
         /// Delete 
         /// </summary>
@@ -109,17 +113,15 @@ namespace Lab1Web.Controllers
         [HttpDelete("{id}", Name = "Delete instructor by Id")]
         public async Task<IActionResult> Delete(int id)
         {
-            Instructor instructor = await _context.Set<Instructor>().FindAsync(id);
-            _context.Set<Instructor>().Remove(instructor);
-            await _context.SaveChangesAsync();
-            return Ok(instructor);
+            var instructor = await _repository.InstructorRepository.FindAsync(id);
+            if (instructor == null) return NotFound();
+            await _repository.InstructorRepository.DeleteAsync(instructor);
+            return Ok(_mapper.Map<InstructorOutputDto>(instructor));
         }
         [HttpDelete(Name = "Delete all instructors")]
         public async Task<IActionResult> Delete()
         {
-            var list = await _context.Set<Instructor>().ToListAsync();
-            _context.Set<Instructor>().RemoveRange(list);
-            await _context.SaveChangesAsync();
+            await _repository.InstructorRepository.DeleteAsync();
             return Ok();
         }
     }
