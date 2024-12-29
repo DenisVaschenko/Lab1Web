@@ -6,14 +6,29 @@ using FluentValidation;
 using Microsoft.OpenApi.Models;
 using Microsoft.EntityFrameworkCore;
 using System.Reflection;
+using Lab1Web.Configuration;
+using Microsoft.Extensions.Options;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddDbContext<DataModelContext>(
     contextOptions => contextOptions.UseSqlite("Data Source = MyDatabase.db"));
-builder.Services.AddFluentValidationAutoValidation();
+builder.Services.AddScoped(typeof(IValidateOptions<>), typeof(ApiModeOptionsValidator<>));
+builder.Services.AddScoped(typeof(IValidateOptions<>), typeof(MaxAttachOptionsValidator<>));
+builder.Services.AddOptions<DataBaseConfiguration>()
+    .BindConfiguration("DataBaseConfiguration");
+builder.Services.AddOptions<StudentConfiguration>()
+    .BindConfiguration("DataBaseConfiguration:StudentConfiguration");
+builder.Services.AddOptions<CourseConfiguration>()
+    .BindConfiguration("DataBaseConfiguration:CourseConfiguration");
+builder.Services.AddOptions<InstructorConfiguration>()
+    .BindConfiguration("DataBaseConfiguration:InstructorConfiguration");
 builder.Services.AddControllers();
+builder.Services.AddOutputCache(opt =>
+{
+    opt.AddBasePolicy(b => b.Expire(TimeSpan.FromSeconds(60)).SetVaryByQuery("*"));
+});
 builder.Services.AddAutoMapper(Assembly.GetExecutingAssembly());
 // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
 builder.Services.AddEndpointsApiExplorer();
@@ -49,7 +64,7 @@ if (app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 app.UseAuthorization();
-
+app.UseOutputCache();
 app.MapControllers();
 
 app.Run();
