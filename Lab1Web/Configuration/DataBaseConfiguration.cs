@@ -30,7 +30,7 @@ namespace Lab1Web.Configuration
             switch (parentApiMode)
             {
                 case "full_access":
-                    return childApiMode == "full_access" || childApiMode != "read_only" || childApiMode != "write_only"? success : fail;
+                    return childApiMode == "full_access" || childApiMode == "read_only" || childApiMode == "write_only"? success : fail;
                 case "read_only":
                     return parentApiMode == childApiMode? success : fail;
                 case "write_only":
