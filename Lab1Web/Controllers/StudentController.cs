@@ -36,6 +36,7 @@ namespace Lab1Web.Controllers
         /// <param name="pageSize">The desired page size.</param>
         /// <returns>Paged courses</returns>
         [HttpGet(Name = "GetAllStudents")]
+        [OutputCache]
         public async Task<IEnumerable<StudentOutputDto>> GetAll(int page = 1, int pageSize = 10) 
         {
             if (_options.Value.ApiMode == "write_only") return null;
@@ -50,7 +51,6 @@ namespace Lab1Web.Controllers
         /// <response code = "200">Returns the found item</response>
         /// <response code = "404">If the item isn't found</response>
         [HttpGet("{id}", Name = "Find student by id")]
-        [OutputCache]
         [ProducesResponseType<Course>(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<StudentOutputDto> GetById(int id) 
