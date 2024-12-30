@@ -297,7 +297,7 @@ function createPostRequest(name){
     button.innerText = `Create ${name}`;
     button.addEventListener('click', () => {
         for (const [key,value] of Object.entries(newBody)){
-            if (!isNaN(parseFloat(value.value.trim()))){newBody[key]=parseFloat(value.value.trim());}
+            if (!isNaN(parseFloat(value.value.trim())) && key != 'phone'){newBody[key]=parseFloat(value.value.trim());}
             else {newBody[key]=value.value;}
         };
         console.log(JSON.stringify(newBody));
@@ -347,10 +347,10 @@ function createChangeRequest(name, id){
     tableContainer.innerHTML = "";
     const newBody = getInputEntity(name);
     const button = document.createElement("button");
-    button.innerText = `CUpdate ${name} with id ${id}`;
+    button.innerText = `Update ${name} with id ${id}`;
     button.addEventListener('click', () => {
         for (const [key,value] of Object.entries(newBody)){
-            if (!isNaN(parseFloat(value.value.trim()))){newBody[key]=parseFloat(value.value.trim());}
+            if (!isNaN(parseFloat(value.value.trim())) && key != 'phone'){newBody[key]=parseFloat(value.value.trim());}
             else {newBody[key]=value.value;}
         };
         console.log(JSON.stringify(newBody));
