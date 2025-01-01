@@ -8,7 +8,7 @@ namespace Lab1Web
 {
     public static class ServiceConfigurator
     {
-        public static void Configure(this IServiceCollection Services)
+        public static void ConfigureServices(this IServiceCollection Services)
         {
             Services.AddDbContext<DataModelContext>(
                 contextOptions => contextOptions.UseSqlite("Data Source = MyDatabase.db"));
