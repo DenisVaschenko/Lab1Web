@@ -3,7 +3,7 @@ using Lab1Web;
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-ServiceConfigurator.Configure(builder.Services);
+builder.Services.Configure();
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
