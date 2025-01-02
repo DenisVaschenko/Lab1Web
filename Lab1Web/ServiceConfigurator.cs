@@ -23,7 +23,6 @@ namespace Lab1Web
             Services.AddOptions<InstructorConfiguration>()
                 .BindConfiguration("DataBaseConfiguration:InstructorConfiguration");
             Services.AddControllers();
-            Services.AddControllers();
             Services.AddOutputCache(opt =>
             {
                 opt.AddBasePolicy(b => b.Expire(TimeSpan.FromSeconds(60)).SetVaryByQuery("*"));
